@@ -11,7 +11,31 @@ interface Balance {
 @EntityRepository(Transaction)
 class TransactionsRepository extends Repository<Transaction> {
   public async getBalance(): Promise<Balance> {
-    // TODO
+    const transactions = await this.find();
+
+    const finalBalance: Balance = transactions.reduce(
+      (balance: Balance, transaction: Transaction) => {
+        // https://stackoverflow.com/questions/54274004/why-am-i-getting-a-assignment-to-property-of-function-parameter-eslinterror
+        const bal = balance;
+
+        if (transaction.type === 'income') {
+          bal.income += Number(transaction.value);
+          bal.total += Number(transaction.value);
+        } else if (transaction.type === 'outcome') {
+          bal.outcome += Number(transaction.value);
+          bal.total -= Number(transaction.value);
+        }
+
+        return bal;
+      },
+      {
+        income: 0,
+        outcome: 0,
+        total: 0,
+      },
+    );
+
+    return finalBalance;
   }
 }
 
